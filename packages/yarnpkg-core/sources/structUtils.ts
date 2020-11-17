@@ -1,4 +1,5 @@
 import {PortablePath, toFilename}               from '@yarnpkg/fslib';
+import memoizeLodash                            from 'lodash/memoize';
 import querystring                              from 'querystring';
 import semver                                   from 'semver';
 
@@ -14,18 +15,27 @@ import {Ident, Descriptor, Locator, Package}    from './types';
 const VIRTUAL_PROTOCOL = `virtual:`;
 const VIRTUAL_ABBREVIATE = 5;
 
+function memoize<T extends (...args: Array<any>) => any>(func: T, resolver?: (...args: Parameters<T>) => string) {
+  const memoized = memoizeLodash(func, resolver);
+
+  return function memoizedFunction(...args: Parameters<T>): ReturnType<T> {
+    const result = memoized(...args);
+    return result && typeof result === `object` ? {...result}:result;
+  };
+}
+
 /**
  * Creates a package ident.
  *
  * @param scope The package scope without the `@` prefix (eg. `types`)
  * @param name The name of the package
  */
-export function makeIdent(scope: string | null, name: string): Ident {
+export const makeIdent = memoize((scope: string | null, name: string): Ident => {
   if (scope?.startsWith(`@`))
     throw new Error(`Invalid scope: don't prefix it with '@'`);
 
   return {identHash: hashUtils.makeHash<IdentHash>(scope, name), scope, name};
-}
+}, (scope,name) => `${scope}-${name}`);
 
 /**
  * Creates a package descriptor.
@@ -33,9 +43,9 @@ export function makeIdent(scope: string | null, name: string): Ident {
  * @param ident The base ident (see `makeIdent`)
  * @param range The range to attach (eg. `^1.0.0`)
  */
-export function makeDescriptor(ident: Ident, range: string): Descriptor {
+export const makeDescriptor = memoize((ident: Ident, range: string): Descriptor => {
   return {identHash: ident.identHash, scope: ident.scope, name: ident.name, descriptorHash: hashUtils.makeHash<DescriptorHash>(ident.identHash, range), range};
-}
+}, (ident, range) => `${ident.identHash}-${range}`);
 
 /**
  * Creates a package locator.
@@ -316,7 +326,7 @@ export function parseIdent(string: string): Ident {
  *
  * @param string The ident string (eg. `@types/lodash`)
  */
-export function tryParseIdent(string: string): Ident | null {
+export const tryParseIdent = memoize((string: String): Ident | null => {
   const match = string.match(/^(?:@([^/]+?)\/)?([^/]+)$/);
   if (!match)
     return null;
@@ -328,7 +338,7 @@ export function tryParseIdent(string: string): Ident | null {
     : null;
 
   return makeIdent(realScope, name);
-}
+});
 
 /**
  * Parses a `string` into a descriptor
@@ -354,7 +364,7 @@ export function parseDescriptor(string: string, strict: boolean = false): Descri
  * @param string The descriptor string (eg. `lodash@^1.0.0`)
  * @param strict If `false`, the range is optional (`unknown` will be used as fallback)
  */
-export function tryParseDescriptor(string: string, strict: boolean = false): Descriptor | null {
+export const tryParseDescriptor = memoize((string: string, strict: boolean = false): Descriptor | null => {
   const match = strict
     ? string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))$/)
     : string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))?$/);
@@ -375,7 +385,7 @@ export function tryParseDescriptor(string: string, strict: boolean = false): Des
     : `unknown`;
 
   return makeDescriptor(makeIdent(realScope, name), realRange);
-}
+}, (string,strict) => `${string}-${strict}`);
 
 /**
  * Parses a `string` into a locator
@@ -401,7 +411,7 @@ export function parseLocator(string: string, strict: boolean = false): Locator {
  * @param string The locator string (eg. `lodash@1.0.0`)
  * @param strict If `false`, the reference is optional (`unknown` will be used as fallback)
  */
-export function tryParseLocator(string: string, strict: boolean = false): Locator | null {
+export const tryParseLocator = memoize((string: string, strict: boolean = false): Locator | null => {
   const match = strict
     ? string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))$/)
     : string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))?$/);
@@ -422,7 +432,7 @@ export function tryParseLocator(string: string, strict: boolean = false): Locato
     : `unknown`;
 
   return makeLocator(makeIdent(realScope, name), realReference);
-}
+}, (string,strict) => `${string}-${strict}`);
 
 type ParseRangeOptions = {
   /** Throw an error if bindings are missing */
