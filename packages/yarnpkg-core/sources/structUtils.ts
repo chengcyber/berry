@@ -36,12 +36,15 @@ function memoize<T extends (...args: Array<any>) => any>(func: T, resolver?: (..
  * @param scope The package scope without the `@` prefix (eg. `types`)
  * @param name The name of the package
  */
-export const makeIdent = memoize((scope: string | null, name: string): Ident => {
-  if (scope?.startsWith(`@`))
-    throw new Error(`Invalid scope: don't prefix it with '@'`);
+export const makeIdent = memoize(
+  (scope: string | null, name: string): Ident => {
+    if (scope?.startsWith(`@`))
+      throw new Error(`Invalid scope: don't prefix it with '@'`);
 
-  return {identHash: hashUtils.makeHash<IdentHash>(scope, name), scope, name};
-}, (scope,name) => `${scope}-${name}`);
+    return {identHash: hashUtils.makeHash<IdentHash>(scope, name), scope, name};
+  },
+  (scope, name) => `${scope}-${name}`
+);
 
 /**
  * Creates a package descriptor.
@@ -49,9 +52,18 @@ export const makeIdent = memoize((scope: string | null, name: string): Ident => 
  * @param ident The base ident (see `makeIdent`)
  * @param range The range to attach (eg. `^1.0.0`)
  */
-export const makeDescriptor = memoize((ident: Ident, range: string): Descriptor => {
-  return {identHash: ident.identHash, scope: ident.scope, name: ident.name, descriptorHash: hashUtils.makeHash<DescriptorHash>(ident.identHash, range), range};
-}, (ident, range) => `${ident.identHash}-${range}`);
+export const makeDescriptor = memoize(
+  (ident: Ident, range: string): Descriptor => {
+    return {
+      identHash: ident.identHash,
+      scope: ident.scope,
+      name: ident.name,
+      descriptorHash: hashUtils.makeHash<DescriptorHash>(ident.identHash, range),
+      range,
+    };
+  },
+  (ident, range) => `${ident.identHash}-${range}`
+);
 
 /**
  * Creates a package locator.
@@ -59,9 +71,18 @@ export const makeDescriptor = memoize((ident: Ident, range: string): Descriptor 
  * @param ident The base ident (see `makeIdent`)
  * @param range The reference to attach (eg. `1.0.0`)
  */
-export const makeLocator = memoize((ident: Ident, reference: string): Locator => {
-  return {identHash: ident.identHash, scope: ident.scope, name: ident.name, locatorHash: hashUtils.makeHash<LocatorHash>(ident.identHash, reference), reference};
-}, (ident, reference) => `${ident.identHash}-${reference}`);
+export const makeLocator = memoize(
+  (ident: Ident, reference: string): Locator => {
+    return {
+      identHash: ident.identHash,
+      scope: ident.scope,
+      name: ident.name,
+      locatorHash: hashUtils.makeHash<LocatorHash>(ident.identHash, reference),
+      reference,
+    };
+  },
+  (ident, reference) => `${ident.identHash}-${reference}`
+);
 
 /**
  * Turns a compatible source to an ident. You won't really have to use this
@@ -370,28 +391,31 @@ export function parseDescriptor(string: string, strict: boolean = false): Descri
  * @param string The descriptor string (eg. `lodash@^1.0.0`)
  * @param strict If `false`, the range is optional (`unknown` will be used as fallback)
  */
-export const tryParseDescriptor = memoize((string: string, strict: boolean = false): Descriptor | null => {
-  const match = strict
-    ? string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))$/)
-    : string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))?$/);
+export const tryParseDescriptor = memoize(
+  (string: string, strict: boolean = false): Descriptor | null => {
+    const match = strict
+      ? string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))$/)
+      : string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))?$/);
 
-  if (!match)
-    return null;
+    if (!match)
+      return null;
 
-  const [, scope, name, range] = match;
-  if (range === `unknown`)
-    throw new Error(`Invalid range (${string})`);
+    const [, scope, name, range] = match;
+    if (range === `unknown`)
+      throw new Error(`Invalid range (${string})`);
 
-  const realScope = typeof scope !== `undefined`
-    ? scope
-    : null;
+    const realScope = typeof scope !== `undefined`
+      ? scope
+      : null;
 
-  const realRange = typeof range !== `undefined`
-    ? range
-    : `unknown`;
+    const realRange = typeof range !== `undefined`
+      ? range
+      : `unknown`;
 
-  return makeDescriptor(makeIdent(realScope, name), realRange);
-}, (string,strict) => `${string}-${strict}`);
+    return makeDescriptor(makeIdent(realScope, name), realRange);
+  },
+  (string, strict) => `${string}-${strict}`
+);
 
 /**
  * Parses a `string` into a locator
@@ -417,28 +441,31 @@ export function parseLocator(string: string, strict: boolean = false): Locator {
  * @param string The locator string (eg. `lodash@1.0.0`)
  * @param strict If `false`, the reference is optional (`unknown` will be used as fallback)
  */
-export const tryParseLocator = memoize((string: string, strict: boolean = false): Locator | null => {
-  const match = strict
-    ? string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))$/)
-    : string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))?$/);
+export const tryParseLocator = memoize(
+  (string: string, strict: boolean = false): Locator | null => {
+    const match = strict
+      ? string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))$/)
+      : string.match(/^(?:@([^/]+?)\/)?([^/]+?)(?:@(.+))?$/);
 
-  if (!match)
-    return null;
+    if (!match)
+      return null;
 
-  const [, scope, name, reference] = match;
-  if (reference === `unknown`)
-    throw new Error(`Invalid reference (${string})`);
+    const [, scope, name, reference] = match;
+    if (reference === `unknown`)
+      throw new Error(`Invalid reference (${string})`);
 
-  const realScope = typeof scope !== `undefined`
-    ? scope
-    : null;
+    const realScope = typeof scope !== `undefined`
+      ? scope
+      : null;
 
-  const realReference = typeof reference !== `undefined`
-    ? reference
-    : `unknown`;
+    const realReference = typeof reference !== `undefined`
+      ? reference
+      : `unknown`;
 
-  return makeLocator(makeIdent(realScope, name), realReference);
-}, (string,strict) => `${string}-${strict}`);
+    return makeLocator(makeIdent(realScope, name), realReference);
+  },
+  (string, strict) => `${string}-${strict}`
+);
 
 type ParseRangeOptions = {
   /** Throw an error if bindings are missing */
