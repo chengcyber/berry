@@ -53,9 +53,9 @@ export const makeDescriptor = memoize((ident: Ident, range: string): Descriptor 
  * @param ident The base ident (see `makeIdent`)
  * @param range The reference to attach (eg. `1.0.0`)
  */
-export function makeLocator(ident: Ident, reference: string): Locator {
+export const makeLocator = memoize((ident: Ident, reference: string): Locator => {
   return {identHash: ident.identHash, scope: ident.scope, name: ident.name, locatorHash: hashUtils.makeHash<LocatorHash>(ident.identHash, reference), reference};
-}
+}, (ident, reference) => `${ident.identHash}-${reference}`);
 
 /**
  * Turns a compatible source to an ident. You won't really have to use this
