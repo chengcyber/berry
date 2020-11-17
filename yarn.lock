@@ -5521,6 +5521,7 @@ __metadata:
     globby: ^11.0.1
     got: ^11.7.0
     json-file-plus: ^3.3.1
+    klona: ^2.0.4
     lodash: ^4.17.15
     micromatch: ^4.0.2
     mkdirp: ^0.5.1
@@ -17578,6 +17579,13 @@ fsevents@^1.2.7:
   version: 3.0.3
   resolution: "kleur@npm:3.0.3"
   checksum: 20ef0e37fb3f9aebbec8a75b61f547051aa61e3a6c51bd2678e77a11d69d73885a76966aea77f09c40677c7dfa274a5e16741ec89859213c9f798d4a96f77521
+  languageName: node
+  linkType: hard
+
+"klona@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "klona@npm:2.0.4"
+  checksum: be4a0c784135b6a75ac2c5ac9564894807aa050de041ac775a20d3ee46969ac5c3d37503d12c215c7decb592196e59e22852fd0cf28ac0cc29fe3a6df9168624
   languageName: node
   linkType: hard
 

@@ -10286,6 +10286,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["globby", "npm:11.0.1"],
             ["got", "npm:11.7.0"],
             ["json-file-plus", "npm:3.3.1"],
+            ["klona", "npm:2.0.4"],
             ["lodash", "npm:4.17.15"],
             ["micromatch", "npm:4.0.2"],
             ["mkdirp", "npm:0.5.1"],
@@ -25723,6 +25724,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/kleur-npm-3.0.3-f6f53649a4-20ef0e37fb.zip/node_modules/kleur/",
           "packageDependencies": [
             ["kleur", "npm:3.0.3"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["klona", [
+        ["npm:2.0.4", {
+          "packageLocation": "./.yarn/cache/klona-npm-2.0.4-6bc4e7cd86-be4a0c7841.zip/node_modules/klona/",
+          "packageDependencies": [
+            ["klona", "npm:2.0.4"]
           ],
           "linkType": "HARD",
         }]
