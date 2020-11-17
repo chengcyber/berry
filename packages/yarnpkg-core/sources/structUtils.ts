@@ -1,5 +1,4 @@
 import {PortablePath, toFilename}               from '@yarnpkg/fslib';
-import memoizeLodash                            from 'lodash/memoize';
 import querystring                              from 'querystring';
 import semver                                   from 'semver';
 
@@ -16,11 +15,18 @@ const VIRTUAL_PROTOCOL = `virtual:`;
 const VIRTUAL_ABBREVIATE = 5;
 
 function memoize<T extends (...args: Array<any>) => any>(func: T, resolver?: (...args: Parameters<T>) => string) {
-  const memoized = memoizeLodash(func, resolver);
+  const cache = new Map<string, ReturnType<T>>();
 
-  return function memoizedFunction(...args: Parameters<T>): ReturnType<T> {
-    const result = memoized(...args);
-    return result && typeof result === `object` ? {...result}:result;
+  return (...args: Parameters<T>): ReturnType<T> => {
+    const cacheKey = resolver ? resolver(...args) : args[0];
+
+    const cacheEntry = cache.get(cacheKey);
+    if (typeof cacheEntry !== `undefined`)
+      return cacheEntry && typeof cacheEntry === `object` ? {...cacheEntry} : cacheEntry;
+
+    const res = func(...args);
+    cache.set(cacheKey, res);
+    return res;
   };
 }
 
