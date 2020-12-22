@@ -5,7 +5,7 @@ import {WatchOptions, WatchCallback, Watcher}                                   
 import {NodeFS, FakeFS, WriteFileOptions, ProxiedFS}                                                                               from '@yarnpkg/fslib';
 import {CreateReadStreamOptions, CreateWriteStreamOptions}                                                                         from '@yarnpkg/fslib';
 import {PnpApi}                                                                                                                    from '@yarnpkg/pnp';
-import fs                                                                                                                          from 'fs';
+import fs, {BigIntStats, Stats}                                                                                                    from 'fs';
 
 import {WatchManager}                                                                                                              from './WatchManager';
 import {NodeModulesTreeOptions, NodeModulesTree}                                                                                   from './buildNodeModulesTree';
@@ -294,25 +294,37 @@ export class PortableNodeModulesFS extends FakeFS<PortablePath> {
     return this.baseFs.accessSync(this.resolveDirOrFilePath(p), mode);
   }
 
-  async statPromise(p: PortablePath) {
-    return await this.baseFs.statPromise(this.resolveDirOrFilePath(p));
+  async statPromise(p: PortablePath): Promise<Stats>
+  async statPromise(p: PortablePath, opts: {bigint: true}): Promise<BigIntStats>
+  async statPromise(p: PortablePath, opts?: {bigint: boolean}): Promise<BigIntStats | Stats>
+  async statPromise(p: PortablePath, opts?: {bigint: boolean}) {
+    return await this.baseFs.statPromise(this.resolveDirOrFilePath(p), opts);
   }
 
-  statSync(p: PortablePath) {
-    return this.baseFs.statSync(this.resolveDirOrFilePath(p));
+  statSync(p: PortablePath): Stats
+  statSync(p: PortablePath, opts: {bigint: true}): BigIntStats
+  statSync(p: PortablePath, opts?: {bigint: boolean}): BigIntStats | Stats
+  statSync(p: PortablePath, opts?: {bigint: boolean}) {
+    return this.baseFs.statSync(this.resolveDirOrFilePath(p), opts);
   }
 
-  async lstatPromise(p: PortablePath) {
+  async lstatPromise(p: PortablePath): Promise<Stats>
+  async lstatPromise(p: PortablePath, opts: {bigint: true}): Promise<BigIntStats>
+  async lstatPromise(p: PortablePath, opts?: { bigint: boolean }): Promise<BigIntStats | Stats>
+  async lstatPromise(p: PortablePath, opts?: { bigint: boolean }) {
     return this.resolveLink(p, `lstat`,
       stats => PortableNodeModulesFS.makeSymlinkStats(stats),
-      async resolvedPath => await this.baseFs.lstatPromise(resolvedPath)
+      async resolvedPath => await this.baseFs.lstatPromise(resolvedPath, opts)
     );
   }
 
-  lstatSync(p: PortablePath) {
+  lstatSync(p: PortablePath): Stats;
+  lstatSync(p: PortablePath, opts: {bigint: true}): BigIntStats;
+  lstatSync(p: PortablePath, opts?: { bigint: boolean }): BigIntStats | Stats
+  lstatSync(p: PortablePath, opts?: { bigint: boolean }): BigIntStats | Stats {
     return this.resolveLink(p, `lstat`,
       stats => PortableNodeModulesFS.makeSymlinkStats(stats),
-      resolvedPath => this.baseFs.lstatSync(this.resolveDirOrFilePath(resolvedPath))
+      resolvedPath => this.baseFs.lstatSync(this.resolveDirOrFilePath(resolvedPath), opts)
     );
   }
 
