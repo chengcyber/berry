@@ -577,7 +577,7 @@ export class ZipFS extends BasePortableFakeFS {
   async statPromise(p: PortablePath, opts: {bigint: true}): Promise<BigIntStats>
   async statPromise(p: PortablePath, opts?: {bigint: boolean}): Promise<BigIntStats | Stats>
   async statPromise(p: PortablePath, opts?: {bigint: boolean}) {
-    return this.statSync(p);
+    return this.statSync(p, opts);
   }
 
   statSync(p: PortablePath): Stats
@@ -592,7 +592,7 @@ export class ZipFS extends BasePortableFakeFS {
     if (p[p.length - 1] === `/` && !this.listings.has(resolvedP))
       throw errors.ENOTDIR(`stat '${p}'`);
 
-    return this.statImpl(`stat '${p}'`, resolvedP);
+    return this.statImpl(`stat '${p}'`, resolvedP, opts);
   }
 
   async lstatPromise(p: PortablePath): Promise<Stats>
@@ -614,10 +614,10 @@ export class ZipFS extends BasePortableFakeFS {
     if (p[p.length - 1] === `/` && !this.listings.has(resolvedP))
       throw errors.ENOTDIR(`lstat '${p}'`);
 
-    return this.statImpl(`lstat '${p}'`, resolvedP);
+    return this.statImpl(`lstat '${p}'`, resolvedP, opts);
   }
 
-  private statImpl(reason: string, p: PortablePath): Stats {
+  private statImpl(reason: string, p: PortablePath, opts: {bigint?: boolean} = {}): Stats | BigIntStats {
     const entry = this.entries.get(p);
 
     // File, or explicit directory
@@ -657,7 +657,8 @@ export class ZipFS extends BasePortableFakeFS {
 
       const mode = type | (this.getUnixMode(entry, defaultMode) & 0o777);
 
-      return Object.assign(new statUtils.StatEntry(), {uid, gid, size, blksize, blocks, atime, birthtime, ctime, mtime, atimeMs, birthtimeMs, ctimeMs, mtimeMs, mode});
+      const statInstance = Object.assign(new statUtils.StatEntry(), {uid, gid, size, blksize, blocks, atime, birthtime, ctime, mtime, atimeMs, birthtimeMs, ctimeMs, mtimeMs, mode});
+      return opts.bigint === true ? statUtils.convertToBigIntStats(statInstance) : statInstance;
     }
 
     // Implicit directory
@@ -681,7 +682,8 @@ export class ZipFS extends BasePortableFakeFS {
 
       const mode = S_IFDIR | 0o755;
 
-      return Object.assign(new statUtils.StatEntry(), {uid, gid, size, blksize, blocks, atime, birthtime, ctime, mtime, atimeMs, birthtimeMs, ctimeMs, mtimeMs, mode});
+      const statInstance = Object.assign(new statUtils.StatEntry(), {uid, gid, size, blksize, blocks, atime, birthtime, ctime, mtime, atimeMs, birthtimeMs, ctimeMs, mtimeMs, mode});
+      return opts.bigint === true ? statUtils.convertToBigIntStats(statInstance) : statInstance;
     }
 
     throw new Error(`Unreachable`);
